@@ -1,0 +1,35 @@
+{
+	"nodes":[
+		{"id":"crack_surface_energy","type":"file","file":"Concepts/crack_surface_energy.md","x":-500,"y":-340,"width":400,"height":260},
+		{"id":"phase_field_variable","type":"file","file":"Concepts/phase_field_variable.md","x":500,"y":0,"width":400,"height":260},
+		{"id":"length_scale_parameter","type":"file","file":"Concepts/length_scale_parameter.md","x":0,"y":340,"width":400,"height":260},
+		{"id":"ambrosio_tortorelli_regularization","type":"file","file":"Concepts/ambrosio_tortorelli_regularization.md","x":0,"y":-340,"width":400,"height":260},
+		{"id":"phase_field_fracture","type":"file","file":"Concepts/phase_field_fracture.md","x":0,"y":0,"width":400,"height":260},
+		{"id":"gradient_damage","type":"file","file":"Concepts/gradient_damage.md","x":-640,"y":300,"width":400,"height":260},
+		{"id":"finite_element_mesh","type":"file","file":"Concepts/finite_element_mesh.md","x":660,"y":340,"width":400,"height":260},
+		{"id":"sharp_crack_limit","type":"file","file":"Concepts/sharp_crack_limit.md","x":0,"y":760,"width":400,"height":260},
+		{"id":"at1_model","type":"file","file":"Concepts/at1_model.md","x":500,"y":760,"width":400,"height":260},
+		{"id":"at2_model","type":"file","file":"Concepts/at2_model.md","x":-500,"y":1180,"width":400,"height":260},
+		{"id":"shape_function","type":"file","file":"Concepts/shape_function.md","x":500,"y":1600,"width":400,"height":300},
+		{"id":"finite_element_discretization_error","type":"file","file":"Concepts/finite_element_discretization_error.md","x":-640,"y":760,"width":400,"height":260},
+		{"id":"finite_element_interpolation","type":"file","file":"Concepts/finite_element_interpolation.md","x":-160,"y":1640,"width":400,"height":300}
+	],
+	"edges":[
+		{"id":"edge_1","fromNode":"crack_surface_energy","fromSide":"bottom","toNode":"phase_field_fracture","toSide":"top","color":"5","label":"理论基础 · 候选"},
+		{"id":"edge_2","fromNode":"ambrosio_tortorelli_regularization","fromSide":"bottom","toNode":"phase_field_fracture","toSide":"top","color":"5","label":"理论基础 · 候选"},
+		{"id":"edge_3","fromNode":"length_scale_parameter","fromSide":"top","toNode":"phase_field_variable","toSide":"bottom","color":"1","label":"理论基础 · 待调整"},
+		{"id":"edge_4","fromNode":"ambrosio_tortorelli_regularization","fromSide":"bottom","toNode":"length_scale_parameter","toSide":"top","color":"5","label":"引入/推导 · 候选"},
+		{"id":"edge_5","fromNode":"length_scale_parameter","fromSide":"right","toNode":"finite_element_mesh","toSide":"left","color":"5","label":"前置理解 · 候选"},
+		{"id":"edge_6","fromNode":"gradient_damage","fromSide":"right","toNode":"length_scale_parameter","toSide":"left","color":"1","label":"类比 · 待调整"},
+		{"id":"round02_edge_1","fromNode":"length_scale_parameter","fromSide":"bottom","toNode":"finite_element_discretization_error","toSide":"top","color":"5","label":"区别 · 候选"},
+		{"id":"round02_edge_2","fromNode":"finite_element_mesh","fromSide":"left","toNode":"finite_element_discretization_error","toSide":"right","color":"1","label":"理论基础 · 待调整"},
+		{"id":"round02_edge_3","fromNode":"length_scale_parameter","fromSide":"bottom","toNode":"sharp_crack_limit","toSide":"top","color":"1","label":"引入/推导 · 待调整"},
+		{"id":"round02_edge_4","fromNode":"phase_field_fracture","fromSide":"bottom","toNode":"sharp_crack_limit","toSide":"top","color":"1","label":"应用 · 待调整"},
+		{"id":"round02_edge_5","fromNode":"phase_field_fracture","fromSide":"bottom","toNode":"at1_model","toSide":"top","color":"5","label":"扩展 · 候选"},
+		{"id":"round02_edge_6","fromNode":"phase_field_fracture","fromSide":"bottom","toNode":"at2_model","toSide":"top","color":"5","label":"扩展 · 候选"},
+		{"id":"round02_edge_7","fromNode":"at1_model","fromSide":"left","toNode":"at2_model","toSide":"right","color":"5","label":"区别 · 候选"},
+		{"id":"rel_586cdaf8373415de","fromNode":"shape_function","fromSide":"left","toNode":"finite_element_interpolation","toSide":"right","color":"5","label":"理论基础 · 候选"},
+		{"id":"rel_c061c4633191de34","fromNode":"finite_element_interpolation","fromSide":"top","toNode":"finite_element_mesh","toSide":"bottom","color":"1","label":"理论基础 · 待调整"},
+		{"id":"rel_810389a68c710a00","fromNode":"finite_element_interpolation","fromSide":"top","toNode":"finite_element_discretization_error","toSide":"bottom","color":"1","label":"理论基础 · 待调整"}
+	]
+}

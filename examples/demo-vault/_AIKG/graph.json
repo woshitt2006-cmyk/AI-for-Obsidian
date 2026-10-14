@@ -1,0 +1,507 @@
+{
+  "schema_version": "1.1",
+  "topic_id": "phase_field_length_scale",
+  "topic": "为什么相场断裂需要长度尺度参数？",
+  "nodes": [
+    {
+      "id": "phase_field_fracture",
+      "name": "相场断裂",
+      "type": "theory",
+      "description": "利用连续相场变量描述裂纹演化，将尖锐裂纹问题转化为连续场问题。",
+      "domain": [
+        "断裂力学",
+        "计算力学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 从追踪裂面到求解两个场\n\n尖锐裂纹由几何集合描述，而变分相场断裂用位移 $\\mathbf u$ 与连续损伤场 $d$ 描述响应。这里统一采用 $d=0$ 完整、$d=1$ 完全断裂。相场让裂纹分叉和合并通过场分布表现出来，但真实模型仍需要决定能量、边界条件、演化约束与求解方式。\n\n## 一种明确的能量框架\n\n在小应变、准静态、均匀 $G_c$ 的简化脆性模型中，可写\n\n$$\n\\mathcal E_\\ell(\\mathbf u,d)=\\int_\\Omega g(d)\\psi_0(\\boldsymbol\\varepsilon(\\mathbf u))\\,\\mathrm dV\n+G_c\\int_\\Omega\\gamma_\\ell(d,\\nabla d)\\,\\mathrm dV-\\mathcal W_{\\mathrm{ext}}.\n$$\n\n$\\Omega$ 是实体域；$\\psi_0$ 是未损伤弹性能密度，单位 J/m³；$g$ 是无量纲退化函数；$\\gamma_\\ell$ 是裂纹面积密度，单位 1/m；$\\mathcal W_{\\mathrm{ext}}$ 是外力功。常用 $g(d)=(1-d)^2$，数值实现可能加小残余刚度。张压分裂版本会只退化部分弹性能，不能直接套用此简式预测压缩开裂。\n\n## 机制与求解\n\n降低刚度可能释放弹性能，增加损伤又付出裂纹能量，梯度项反对无限陡的空间变化。求解是在这些竞争下寻找满足边界与不可逆条件的场。损伤不可逆常要求 $d_{n+1}\\ge d_n$。交替求位移和损伤容易实施，但联合问题通常非凸；达到数值驻点不保证得到全局最小值。\n\n## 怎样用于当前学习\n\n先问自己“裂纹代价写在哪里”，再检查 $\\gamma_\\ell$；接着问“宽度由谁决定”，查看 $\\ell$；最后问“算得准吗”，固定 $\\ell$ 检查网格收敛。AT1/AT2 是同一类框架的不同本构选择，不应仅凭图上一个名称认为所有相场模型完全等价。\n\n## 误解与下一问\n\n相场值不是天然的裂纹开口位移，弥散带宽也不自动等于真实微观过程区宽。需要结合标定解释。下一问：同样的弹性能退化，为什么不同局部裂纹函数会给出不同损伤起始？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "crack_surface_energy",
+      "name": "Griffith裂纹表面能",
+      "type": "equation",
+      "description": "描述裂纹形成所需能量的经典理论基础。",
+      "domain": [
+        "断裂力学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 核心问题：裂纹为什么不能“免费”增长？\n\n裂纹扩展会释放储存的弹性能，同时需要付出形成新裂面的能量。Griffith 思想把这两个过程放到同一本能量账中：释放是否足以支付新增裂面的代价？这一联系让“材料什么时候断”成为能量竞争问题，而不只是检查某点应力有多大。\n\n## 裂纹能量与符号\n\n对裂纹面集合 $\\Gamma$，常用表达为\n\n$$\nW_c(\\Gamma)=\\int_{\\Gamma}G_c\\,\\mathrm{d}A.\n$$\n\n$W_c$ 是裂纹形成的能量，单位 J；$G_c$ 是单位新增裂纹面积的断裂能，单位 J/m²；$\\mathrm{d}A$ 是裂纹面积微元。若 $G_c$ 均匀，得到 $W_c=G_c A$。二维计算常以单位厚度表示，此时裂纹集合是曲线，能量和面积的解释需要带上厚度约定。\n\n这里的裂纹面积通常按裂纹几何面的面积计数，不再自动乘两次。对于理想脆性解理，若 $\\gamma_s$ 表示单侧新自由面的表面能密度，在一致的面积约定下可写 $G_c=2\\gamma_s$；工程断裂能也可能包含近裂尖耗散，因此不能把所有材料的 $G_c$ 都等同于纯热力学表面能。阅读文献时先检查作者如何定义面积与断裂能，避免重复计算两侧表面。\n\n## 能量释放率与扩展条件\n\n令 $\\Pi_{\\mathrm{mech}}$ 表示适当加载条件下的机械势能，它包含储能与外力势的贡献。定义\n\n$$\nG=-\\frac{\\partial\\Pi_{\\mathrm{mech}}}{\\partial A}.\n$$\n\n$G$ 是单位面积扩展可释放的机械能，单位也为 J/m²。于是总能量随面积的变化是\n\n$$\n\\frac{\\partial(\\Pi_{\\mathrm{mech}}+W_c)}{\\partial A}=-G+G_c.\n$$\n\n若 $G<G_c$，局部新增裂面需要增加总能量；$G=G_c$ 是准静态传播平衡条件；$G>G_c$ 表示存在传播驱动力。后一条件本身不说明传播是否稳定，还要考虑载荷控制方式、几何与后续能量变化。不能把固定载荷与固定位移下的储能导数直接混用。\n\n## 一个可以自行检查的例子\n\n假设均匀材料 $G_c=1000\\ \\mathrm{J/m^2}$，裂纹新增面积 $\\Delta A=10^{-6}\\ \\mathrm{m^2}$，则新增裂面能量为 $10^{-3}\\ \\mathrm{J}$。这是演示数值，不是实验数据。若该步可释放机械能只有 $0.6\\times10^{-3}\\ \\mathrm{J}$，不足以支付裂面代价；若可释放 $1.2\\times10^{-3}\\ \\mathrm{J}$，则出现能量驱动力。例子省略了路径、稳定性和动力学问题，不能直接用来预测真实裂纹速度。\n\n## 为什么它连接相场断裂\n\n尖锐裂纹模型直接使用 $\\int_\\Gamma G_c\\,\\mathrm{d}A$，但未知裂纹集合的搜索困难。相应变分相场模型用连续损伤场构造可计算的体积分近似。它仍在支付裂纹能量，而不是删除了这笔代价。长度尺度决定这种近似在空间中如何展开。\n\n## 适用范围与常见误解\n\n本笔记主要讨论准静态脆性断裂的能量框架。有塑性、疲劳、黏性或动力学时，能量与演化机制需要扩展。“应力达到某个值”与“$G=G_c$”是不同表述；也不能从这一面积能量项单独确定无缺陷试样的有限拉伸强度。$G$ 是状态与几何相关的驱动力，$G_c$ 是所选模型中的断裂阻力，两者同单位但角色不同。\n\n## 自检与下一问\n\n用自己的话说明负号为什么出现在 $G$ 定义里；检查二维模型如何计入厚度；继续追问：怎样构造体积分，使扩散裂纹仍支付单位面积 $G_c$ 的代价？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "phase_field_variable",
+      "name": "相场变量",
+      "type": "concept",
+      "description": "表示材料从完整状态到断裂状态连续过渡的变量d。",
+      "domain": [
+        "连续介质力学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 相场值描述什么\n\n$d(\\mathbf x)$ 把完整与断裂状态编码为连续标量。本仓库取 $0\\le d\\le1$，0 为完整，1 为断裂；别的文献可能反向定义。比较公式前必须统一约定，否则退化函数、边界条件和不可逆不等式都会看起来相反。\n\n## 值与梯度承担不同任务\n\n例如 $g(d)=(1-d)^2$ 表示弹性刚度如何随损伤降低，而 $\\nabla d$ 表示变化有多陡。$d$ 无量纲，$\\nabla d$ 单位 1/m。局部值决定当前位置的退化，梯度使相邻位置耦合。两点有相同 $d$ 不意味着周围场形态或裂纹能量相同。\n\n## 一维裂纹剖面的教学推演\n\n只考虑 AT2 裂纹能量、固定裂纹中心 $d(0)=1$、远处 $d\\to0$，在无限一维域上驻值方程为\n\n$$\nd-\\ell^2d''=0\\quad(x\\ne0),\\qquad d(x)=\\exp(-|x|/\\ell).\n$$\n\n这里 $x$ 是距裂纹中心的法向坐标，$\\ell$ 是长度尺度。这是无弹性驱动、固定裂纹中心的剖面例子，不是一般耦合问题的通解。在 $|x|=\\ell$ 时 $d=e^{-1}$，显示 $\\ell$ 控制衰减距离。等值阈值改变会改变你画出的“裂纹宽度”，因此宽度需先定义。\n\n## 如何阅读模拟与避免误解\n\n显示 $d>0.9$ 的区域只是一个可视化选择，不能直接当作精确裂面位置。材料点 $d=0.5$ 也不表示裂缝开口为某个长度。不可逆条件 $d_{n+1}\\ge d_n$ 表示不能通过卸载自动愈合；它与本构动力学、历史变量实现并非同一概念。\n\n## 下一问\n\n如果用另一种局部裂纹函数，剖面是否仍是指数形？以何种阈值定义弥散带宽，对网格解析要求有什么影响？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "length_scale_parameter",
+      "name": "长度尺度参数",
+      "type": "concept",
+      "description": "控制裂纹正则化区域宽度的参数l，在经典相场断裂中主要是数学正则化尺度。",
+      "domain": [
+        "断裂力学",
+        "数值方法"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 一个参数的两个问题\n\n长度尺度 $\\ell>0$ 有长度单位，控制扩散裂纹的特征变化距离。必须分别问：它在理论近似中做什么，以及在有限取值的具体模型中改变什么。前者涉及尖锐裂纹极限，后者可能涉及有限强度和标定，不能简单把所有情况称为纯数值参数。\n\n## 为什么同时出现 $1/\\ell$ 和 $\\ell$\n\n一般裂纹密度常写成\n\n$$\n\\gamma_\\ell=\\frac{1}{4c_w}\\left(\\frac{w(d)}{\\ell}+\\ell|\\nabla d|^2\\right),\\qquad c_w=\\int_0^1\\sqrt{w(s)}\\,\\mathrm ds.\n$$\n\n$w$ 是无量纲局部损伤代价，$c_w$ 是归一化常数。两项都具有 1/m 单位。局部项反对广泛损伤，梯度项反对过陡变化；两者竞争才产生有限宽度。\n\n## 用缩放理解宽度\n\n假设一维剖面在宽度 $b$ 内变化，粗略取 $d=O(1)$、$|d'|=O(1/b)$。裂纹能量尺度为 $G_c(b/\\ell+\\ell/b)$，省略系数。宽度太大会抬高局部项，太小会抬高梯度项，平衡给出 $b=O(\\ell)$。这是量纲缩放推演，不是精确宽度公式。\n\n## 有限尺度与网格\n\n一些标准 AT 模型的均匀强度具有 $\\sigma_c\\propto\\sqrt{EG_c/\\ell}$ 的尺度关系；比例系数与模型、加载和假设有关。减小 $\\ell$ 不仅让带变窄，也可能改变起裂预测。网格尺寸 $h$ 是离散尺度，减小它是在更精细地求解已经选定的连续模型。固定 $\\ell$ 细化 $h$ 与改变 $\\ell$ 不是同一种实验。\n\n## 选参和下一问\n\n记录 $\\ell$ 的选择依据：近似参数还是根据强度、过程区信息标定？在同一 $\\ell$ 下检查力—位移、能量和裂纹路径的网格敏感性，再评估换 $\\ell$ 的模型敏感性。不要用一次粗网格结果反推材料尺度。下一问：哪些观测足以区分模型尺度变化与离散误差？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "ambrosio_tortorelli_regularization",
+      "name": "Ambrosio-Tortorelli正则化",
+      "type": "theory",
+      "description": "将尖锐裂纹能量泛函转化为含梯度项的连续形式。",
+      "domain": [
+        "变分法",
+        "计算数学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 正则化解决哪种困难\n\n原始 Ambrosio–Tortorelli 思路来自对 Mumford–Shah 类自由不连续泛函的近似。它启发了将尖锐裂纹能量改写为连续场能量的变分断裂方法。这里讨论其在断裂中的使用，而不是声称原理论从一开始就是断裂本构模型。\n\n## 尖锐面到连续场\n\n计算上的难点是未知集合 $\\Gamma$。一种 AT2 风格的近似是\n\n$$\nG_c\\int_\\Gamma\\mathrm dA\\quad\\leadsto\\quad\nG_c\\int_\\Omega\\left(\\frac{d^2}{2\\ell}+\\frac{\\ell}{2}|\\nabla d|^2\\right)\\mathrm dV.\n$$\n\n符号 $\\leadsto$ 表示构造近似，不是有限 $\\ell$ 时逐点相等。$d$ 是无量纲场，$\\ell$ 提供长度，体积分才能得到 J。配合弹性退化与合适的残余刚度等参数极限，构造完整近似泛函还需要相应假设。\n\n## 为什么梯度项不能省\n\n若只保留局部项，损伤可以收缩到极窄区域以降低能量，却不付出空间变化的代价；如果只有梯度项，则又缺少对广泛损伤的局部惩罚。由两个代价的竞争得到有结构的过渡层。归一化选择的目标之一是让一个理想裂纹剖面支付合适的单位面积能量。\n\n## 参数不是被算出来的常数\n\n这套结构引入 $\\ell$，但没有仅靠正则化理论就给定某种材料必须取多少毫米。极限结论与有限参数标定是两个层次。AT1 同属常用的变分梯度损伤/相场族，但其局部函数与经典二次形式不同，引用原始 AT 理论时要避免省略这些区别。\n\n## 下一问\n\n一个近似泛函具有什么收敛意义？为何能量收敛仍不足以保证任意求解算法给出的演化路径准确？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "gradient_damage",
+      "name": "梯度损伤模型",
+      "type": "theory",
+      "description": "通过损伤梯度描述材料内部长度尺度效应的一类模型。",
+      "domain": [
+        "连续损伤力学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 为什么局部损伤会遇到空间问题\n\n损伤本构让材料逐渐软化。如果软化完全局部，变形可能集中到依赖网格的一条极窄带，耗散也会受离散影响。梯度增强或非局部模型通过空间耦合引入特征长度；不同模型的变量和方程并不完全相同。\n\n## 一个示意模型\n\n以隐式梯度平均为例，可写\n\n$$\n\\bar\\varepsilon-L^2\\Delta\\bar\\varepsilon=\\tilde\\varepsilon.\n$$\n\n$\\tilde\\varepsilon$ 是局部等效应变，$\\bar\\varepsilon$ 是用于损伤驱动的平滑量，均无量纲；$L$ 是平均作用长度，$\\Delta$ 是拉普拉斯算子。还需要边界条件和损伤演化律才能形成完整模型。此式仅代表一类隐式梯度方法，不等同于所有梯度损伤的定义。\n\n## 直觉与相场联系\n\n单个点的响应会受周围区域影响，因而局部软化不再完全脱离邻域。相场断裂也包含梯度耦合，二者有相似的微分结构；不过变量、驱动力、退化律、能量校准和损伤区演化可能不同。不能看到一个 $L^2\\Delta$ 项，就认定两个模型参数可以直接互换。\n\n## 当前关系的修正理由\n\n图中“梯度损伤模型 ↔ 长度尺度参数”把一个模型族与一个参数作类比，层级不一致。更合适的是比较模型族，或者另外建立“梯度损伤内部长度”节点再比较尺度。原边仍标记待调整，其解释只能作为探索线索。\n\n## 如何使用与下一问\n\n比较两个模型时列出被平滑的变量、损伤驱动力、边界条件和耗散标定，而不是只看公式外形。下一问：在相同单轴试验标定后，两个模型的损伤带宽是否仍可能不同？",
+      "sources": [
+        {
+          "title": "Gradient damage vs phase-field approaches for fracture: similarities and differences",
+          "url": "https://eprints.whiterose.ac.uk/id/eprint/100669/1/gradient-phase_revision.pdf",
+          "locator": "第 1–3 节",
+          "supports": "梯度损伤与相场的结构联系及区别"
+        }
+      ]
+    },
+    {
+      "id": "finite_element_mesh",
+      "name": "有限元网格尺寸",
+      "type": "concept",
+      "description": "有限元离散中单元空间尺度，影响连续场和梯度的解析能力。",
+      "domain": [
+        "计算力学",
+        "有限元方法",
+        "计算断裂力学"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 网格尺寸是求解分辨率\n\n有限元用有限自由度近似连续场，$h$ 表示某个单元的特征尺寸。在非均匀网格中 $h$ 是局部量，不应只报告全局平均值。对相场计算，重点是潜在裂纹带附近的单元尺寸、阶次、形状与方向。\n\n## 插值与局部变化\n\n相场离散可写\n\n$$\nd_h(\\mathbf x)=\\sum_iN_i(\\mathbf x)d_i,\\qquad\n\\nabla d_h=\\sum_i\\nabla N_i(\\mathbf x)d_i.\n$$\n\n$N_i$ 是单元形函数，$d_i$ 是节点相场值。每个单元内可表示的变化由形函数决定。若过渡带内只有极少单元，场值和梯度可能都被解析得很差，而裂纹能量恰好依赖二者。\n\n## 为什么比较 $h/\\ell$\n\n比值 $h/\\ell$ 无量纲，是比较离散尺度与模型尺度的方便量。它小一些通常有利于解析过渡层，但充分精度取决于单元、几何、模型与关注的输出。不能对所有问题规定一个通用比例。提高阶次或局部加密也会改变精度与成本。\n\n## 一个验证实验\n\n固定材料、$\\ell$、加载、求解容差与单元类型，只改变裂纹区 $h$，比较反力、耗散能、峰值载荷及路径。若这些观测仍显著改变，说明结果尚不能被视为对该连续模型的稳定近似。如果同时改 $\\ell$，就把离散和模型变化混在一起。\n\n## 常见误解与下一问\n\n“已经使用非局部模型”不意味着任意粗网格都准确；细网格也不能自动修正错误本构或不收敛的非线性求解。下一问：我需要哪些输出同时稳定，才能说当前问题达到了所需网格精度？\n\n## 本次追问补充：插值与分辨率\n\n有限元网格尺寸 h 描述离散单元的空间大小。它不是相场模型中的长度尺度 l。\n\n固定 l 时减小 h，是在更准确地求解同一个正则化相场问题；而减小 l 并同步减小 h，则是在改变连续模型，使裂纹过渡区域趋近尖锐裂纹。\n\n网格需要能够解析长度尺度控制的相场变化，因为裂纹能量包含梯度项，例如 $|\\nabla d|^2$。如果过渡区域只覆盖很少单元，有限元插值可能无法准确表示相场和梯度。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "finite_element_discretization_error",
+      "name": "有限元离散误差",
+      "type": "concept",
+      "description": "由网格尺寸有限导致的数值误差，与连续模型中的长度尺度参数不同。",
+      "domain": [
+        "计算力学",
+        "有限元方法"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 误差应相对什么来定义\n\n离散误差比较的是选定连续模型的解与有限元近似。为避免混淆，记固定 $\\ell$ 的连续解为 $d_\\ell$，网格解为 $d_{\\ell,h}$。两者都可能不同于真实材料观测，而后一差异还包含模型误差和参数误差。\n\n## 两个层次的比较\n\n可以考察场范数或实际关注量 $Q$：\n\n$$\ne_h=\\|d_\\ell-d_{\\ell,h}\\|,\\qquad\n\\delta Q_h=|Q_{\\ell,h}-Q_{\\ell,h/2}|.\n$$\n\n$Q$ 可以是反力、峰值载荷或裂纹能量。相邻网格差异只是收敛诊断，不是没有额外假设就成立的严格误差上界。若没有连续解析解，可以比较多个网格层次并检查稳定趋势。\n\n## 怎样避免把问题归错类\n\n误差还受到单元阶次、网格质量、积分方式与解的光滑性影响。另有非线性迭代误差、载荷步长误差和算法分支选择，不能全部归为有限元离散误差。要检查空间误差，先控制其他误差源，让改变 $h$ 的比较有明确意义。\n\n## 具体诊断与误解\n\n如果固定 $\\ell$ 减小 $h$ 后反力曲线稳定，而改变 $\\ell$ 后起裂载荷明显变化，第二种变化不能简单叫网格误差。反过来，一条曲线吻合也不证明裂纹路径与局部场准确，多种输出有不同敏感性。\n\n## 下一问\n\n当前科研任务真正关心全局载荷、裂纹位置还是局部梯度？选择不同关注量，所需加密区域与验收容差会怎样变化？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "sharp_crack_limit",
+      "name": "尖锐裂纹极限",
+      "type": "concept",
+      "description": "长度尺度趋于零时相场裂纹表示逼近Griffith尖锐裂纹描述的理论极限。",
+      "domain": [
+        "断裂力学",
+        "变分理论"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## 极限在逼近哪一个对象\n\n在适当变分框架中，使 $\\ell\\to0$ 是让弥散裂纹能量逼近尖锐裂纹能量的理论过程。需要说明完整泛函、函数空间、拓扑、边界条件和其他参数的处理，不能仅看“带宽趋零”就宣布所有结果正确。\n\n## 区分能量、解与演化\n\n用示意记号 $\\mathcal E_\\ell\\xrightarrow{\\Gamma}\\mathcal E_0$ 表示 Γ-收敛。它包括能量下界与恢复序列等要求；在适当紧性条件下可以研究极小值和极小解的关系。这与固定网格上一次非线性求解的误差不同，也不自动保证所有局部驻点或完整加载路径收敛。\n\n## 双尺度的计算解释\n\n数值中有 $\\ell$ 与 $h$。固定 $\\ell$ 细化 $h$ 是逼近扩散模型；再考虑 $\\ell$ 变小，是另一层模型极限。一个可控的实验设计是对每个 $\\ell$ 先检查网格稳定，再比较不同 $\\ell$。具体离散收敛条件应取自对应模型与离散方法，不能仅凭保持某个固定比例就宣称完成严格极限。\n\n## 一个容易忽略的区别\n\n尖锐裂纹模型对已有裂纹的传播判据，与无缺陷试样的有限强度预测不是同一个问题。有限尺度相场可能包含强度效应；把 $\\ell$ 任意压小可能同时改变这一预测，而不只是让图像更清晰。\n\n## 下一问\n\n你研究的是预裂纹传播、无缺陷起裂还是缺口问题？每类问题需要检验哪些理论与数值条件，才能讨论逼近 Griffith？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "at1_model",
+      "name": "AT1相场断裂模型",
+      "type": "theory",
+      "description": "采用线性裂纹密度函数的变分相场断裂模型，具有损伤起始阈值。",
+      "domain": [
+        "断裂力学",
+        "变分相场"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## AT1 的具体选择\n\n采用 $d=0$ 完整、$d=1$ 断裂，在常用的同一归一化下，AT1 取 $w(d)=d$，$c_w=2/3$。这里“线性”只指局部裂纹函数，整个能量还含梯度项和弹性退化，并非线性问题。\n\n$$\n\\gamma_\\ell^{\\mathrm{AT1}}=\\frac{3}{8}\\left(\\frac d\\ell+\\ell|\\nabla d|^2\\right).\n$$\n\n## 用一维均匀例子理解起始阈值\n\n为说明机制，设小应变单轴拉伸、均匀 $d$、$g(d)=(1-d)^2$、$\\psi_0=E\\varepsilon^2/2$，省略外力势并考虑初始状态 $d=0$。能量密度对损伤的右导数为\n\n$$\n\\left.\\frac{\\partial\\psi}{\\partial d}\\right|_{d=0}=-2\\psi_0+\\frac{3G_c}{8\\ell}.\n$$\n\n在 $0\\le d$ 约束下，右导数为正时初始损伤没有降低能量的驱动力；阈值对应 $\\psi_0=3G_c/(16\\ell)$。教学推演显示有限的无损伤弹性阶段从何而来。$E$ 是杨氏模量，$\\varepsilon$ 是应变；梯度为零的例子不能代表缺口附近的复杂场。\n\n## 如何比较而不混淆\n\n损伤刚开始变化、结构达到峰值以及可观察裂纹形成，需要分别定义。阈值结论依赖此处的局部函数、退化函数与约束；换一个模型不能照搬。与 AT2 比较时先固定这些共同选择，才能把差异归于 $w$。\n\n## 下一问\n\n引入缺口、梯度和张压分裂后，均匀材料点的阈值如何转化为结构层面的起裂预测？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "at2_model",
+      "name": "AT2相场断裂模型",
+      "type": "theory",
+      "description": "采用二次裂纹密度函数的变分相场断裂模型，损伤演化更加弥散。",
+      "domain": [
+        "断裂力学",
+        "变分相场"
+      ],
+      "review_status": "pending_human_review",
+      "content_md": "## AT2 的具体选择\n\n在同样的损伤约定下，AT2 取 $w(d)=d^2$，$c_w=1/2$，于是\n\n$$\n\\gamma_\\ell^{\\mathrm{AT2}}=\\frac{d^2}{2\\ell}+\\frac\\ell2|\\nabla d|^2.\n$$\n\n二次项只描述局部裂纹代价，完整求解仍耦合位移与损伤。不要只用“更加弥散”替代具体本构解释，因为场宽还与加载和边界有关。\n\n## 为什么没有同样的正起始阈值\n\n在均匀一维教学例子中，$g(d)=(1-d)^2$、$\\psi_0=E\\varepsilon^2/2$。在 $d=0$，能量密度右导数为 $-2\\psi_0$，只要弹性能为正，就有初始损伤驱动力。由均匀驻值条件可解得\n\n$$\nd=\\frac{2\\psi_0}{2\\psi_0+G_c/\\ell}.\n$$\n\n这表示小载荷下也可能出现小损伤；不表示结构一施加载荷就出现宏观裂缝或丧失承载力。忽略梯度、约束激活与历史效应的这个例子只用来说明局部机制，不能当作一般演化解。\n\n## 怎样解释计算曲线\n\n随着损伤增加，退化降低应力，但仍可能存在有限峰值。相比 AT1 的初始无损伤阶段，AT2 在此标准例子中会更早偏离未损伤响应。若把数值中某个 $d$ 阈值定义为“起裂”，报告时必须说明阈值，否则无法比较不同模型的起裂载荷。\n\n## 下一问\n\n同一 $G_c$ 和 $\\ell$ 下，AT1/AT2 为什么不必具有相同峰值强度？是否应按同一材料强度分别标定尺度后再比较？",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "id": "finite_element_interpolation",
+      "name": "有限元插值",
+      "type": "method",
+      "description": "利用节点自由度和形函数构造连续场近似的方法。",
+      "domain": [
+        "有限元方法",
+        "计算力学"
+      ],
+      "content_md": "有限元不能直接表示连续函数 d(x)，而是在有限维函数空间中寻找近似解。对于有限元空间 V_h，近似场写为 $d_h(x)=\\sum_iN_i(x)d_i$。其中 $d_i$ 是节点自由度，$N_i$ 是形函数。\n\n该公式不是任意连续函数的恒等展开，而是有限元选定近似空间中的表示。真实相场 $d(x)$ 与离散相场 $d_h(x)$ 一般不同，误差来自有限维空间无法完全包含真实解。\n\n求梯度时：\n$$\\nabla d_h=\\sum_i\\nabla N_i d_i$$\n因为节点值 $d_i$ 是固定未知量，不随单元内部坐标变化，空间变化完全由形函数决定。\n\n一维两节点线性单元中，若节点坐标为 $x_1=0,x_2=L$，形函数为 $N_1=(L-x)/L,N_2=x/L$。若节点值为 $d_1,d_2$，则：\n$$d_h=N_1d_1+N_2d_2$$\n梯度为：\n$$\\frac{dd_h}{dx}=\\frac{d_2-d_1}{L}$$\n说明有限元只能按照选定函数形式描述节点之间的变化。\n\n在相场断裂中，如果裂纹区域宽度由长度尺度 l 控制，而网格尺寸 h 太大，则有限元空间无法准确描述 d 的快速变化，也无法准确计算 $|\\nabla d|^2$。\n\n常见误解：细化网格 h 不等于改变长度尺度 l。h 改变的是离散精度，l 改变的是连续模型。",
+      "sources": [],
+      "review_status": "pending_human_review",
+      "review_notes": "任意连续场不能被有限空间精确表示，但属于该空间的连续函数可以；节点系数求解前未知，空间求导时是常数。缺少具体数值例子与参考坐标映射。"
+    },
+    {
+      "id": "shape_function",
+      "name": "形函数",
+      "type": "concept",
+      "description": "有限元插值中描述节点值如何影响单元内部场值的基函数。",
+      "domain": [
+        "有限元方法"
+      ],
+      "content_md": "形函数 $N_i$ 是有限元插值的基础函数。对于节点 i，其满足节点性质：在节点 i 处 $N_i=1$，在其他节点处 $N_i=0$。\n\n形函数定义了单元内部场如何由节点值组合得到：\n$$d_h(x)=\\sum_iN_i(x)d_i$$\n\n形函数不是任意函数展开，而是有限元近似空间的组成元素。不同单元类型对应不同形函数，例如线性单元使用线性函数，高阶单元使用高阶多项式。\n\n梯度计算依赖形函数梯度：\n$$\\nabla d_h=\\sum_i\\nabla N_i d_i$$\n因此形函数阶次和网格尺寸共同决定相场梯度的表示能力。",
+      "sources": [],
+      "review_status": "pending_human_review",
+      "review_notes": "节点取值性质适用于这里讨论的节点型 Lagrange 基；不是所有有限元自由度均为点值。未说明分片函数与参考单元。"
+    }
+  ],
+  "edges": [
+    {
+      "source": "crack_surface_energy",
+      "target": "phase_field_fracture",
+      "relation": "foundation",
+      "description": "相场断裂通过正则化方法近似Griffith尖锐裂纹能量问题。",
+      "review_status": "provisional",
+      "id": "rel_5b2a64d486582151",
+      "detail_md": "## 为什么是理论基础\n\nGriffith 给出“弹性能释放支付新裂面代价”的目标能量，相应脆性变分相场保留这笔账，用连续场近似裂面。关键变化是从 $G_c\\int_\\Gamma\\mathrm dA$ 转为 $G_c\\int_\\Omega\\gamma_\\ell\\mathrm dV$，从搜索未知几何转为求解场。这样既可以表示裂纹变化，又仍有明确断裂代价。\n\n这不是有限尺度下两个积分天然相等。裂纹密度、归一化、退化与演化选择均要给定。该基础关系限定于相关 Griffith 型变分框架，不涵盖所有带“相场”名称的模型。使用它可先检查模型是否正确支付裂纹能，而不是只看裂纹图像是否像真实实验。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "ambrosio_tortorelli_regularization",
+      "target": "phase_field_fracture",
+      "relation": "foundation",
+      "description": "该正则化理论提供了相场断裂连续裂纹表示的数学基础。",
+      "review_status": "provisional",
+      "id": "rel_b542ae6d72fbbef8",
+      "detail_md": "## 从数学近似到计算表示\n\n正则化用局部代价与梯度代价代替尖锐不连续的几何代价。断裂中的相场使用这一结构，使裂纹表示可在固定实体网格上求解。局部项惩罚过广损伤，梯度项惩罚过陡过渡，二者的配合提供了扩散裂纹的空间结构。\n\n这一关系解释了梯度为何出现在能量中，但不独自给出材料本构、加载策略或损伤不可逆性。AT 的原始自由不连续问题与机械断裂之间需要明确转接；有相似正则化结构，也不意味着所有动力学断裂问题都满足同一极限结论。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "length_scale_parameter",
+      "target": "phase_field_variable",
+      "relation": "foundation",
+      "description": "长度尺度参数通过梯度项控制相场变量空间变化范围。",
+      "review_status": "needs_revision",
+      "id": "rel_e02a62f93f0b8bf8",
+      "detail_md": "## 实际语义是控制剖面\n\n在固定中心的一维 AT2 剖面 $d(x)=e^{-|x|/\\ell}$ 中，改变 $\\ell$ 改变同一位置的场值与衰减距离。这说明参数通过局部与梯度项的平衡控制空间分布。它没有创造相场变量的定义，也不是理解连续变量的理论基础。\n\n原 foundation 标签仍待调整，建议未来用 controls。完整耦合计算中还会有弹性驱动、边界、约束等影响，所以“由长度尺度控制”也不能被误读为场形态仅由一个参数决定。用这条联系解释带宽时先声明模型与宽度定义。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "ambrosio_tortorelli_regularization",
+      "target": "length_scale_parameter",
+      "relation": "derive",
+      "description": "正则化裂纹能量形式中自然引入长度尺度参数。",
+      "review_status": "provisional",
+      "id": "rel_6036d00650995445",
+      "detail_md": "## 引入不等于确定数值\n\n正则化将局部项和梯度项组合为 $w(d)/\\ell+\\ell|\\nabla d|^2$，长度尺度让量纲一致，也平衡过渡层的两种代价。因此说正则化结构引入了参数是合理的。\n\n但 derive 容易使读者误以为推导能唯一给出材料的 $\\ell$ 数值；通常不能。数值大小需要按研究目标、材料标定和解析要求选择。把“为什么必须有尺度”与“这一材料应该取多少”分开，能避免把理论近似参数直接当作实验常数。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "length_scale_parameter",
+      "target": "finite_element_mesh",
+      "relation": "prerequisite",
+      "description": "有限元网格需要足够细才能解析长度尺度控制的裂纹过渡区域。",
+      "review_status": "provisional",
+      "id": "rel_35d20c4c4d22f693",
+      "detail_md": "## 理解网格选择的前置知识\n\n要选择裂纹区网格，先知道连续解预期在多大距离内变化。若过渡宽度为 $O(\\ell)$，其解析能力与局部 $h/\\ell$ 有关。这是教学上的 prerequisite，而不是参数间唯一的代数推导。\n\n实际精度还取决于形函数阶次、几何、单元质量和输出量。不要固定一个经验比例便结束验证。可先固定 $\\ell$、改变局部 $h$，检查能量与载荷等观测的稳定性；再决定这个网格是否足够支撑对长度尺度的研究。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "gradient_damage",
+      "target": "length_scale_parameter",
+      "relation": "analogy",
+      "description": "梯度损伤模型中也存在内部长度尺度，但其物理解释可能不同于经典相场断裂中的正则化尺度。",
+      "review_status": "needs_revision",
+      "id": "rel_5c6fddaa973c8ef2",
+      "detail_md": "## 类比应比较同层级对象\n\n梯度损伤的内部长度与相场中的长度尺度都参与空间耦合，但其变量、驱动力和标定目的可能不同。这提供了一条研究线索，而原边把模型族直接与参数比较，语义不完整。\n\n建议改为比较梯度损伤与相场模型，或者先建立内部长度节点。相似的拉普拉斯结构不保证等价的耗散、过程区或边界效应；未验证映射时不能把一种模型标定的长度直接代入另一种。本边保持待调整，关系正文用于说明修改理由。",
+      "sources": [
+        {
+          "title": "Gradient damage vs phase-field approaches for fracture: similarities and differences",
+          "url": "https://eprints.whiterose.ac.uk/id/eprint/100669/1/gradient-phase_revision.pdf",
+          "locator": "第 1–3 节",
+          "supports": "梯度损伤与相场的结构联系及区别"
+        }
+      ]
+    },
+    {
+      "source": "length_scale_parameter",
+      "target": "finite_element_discretization_error",
+      "relation": "difference",
+      "description": "长度尺度参数属于连续模型定义，而有限元离散误差来自网格离散，两者影响来源不同。",
+      "review_status": "provisional",
+      "id": "rel_2b83a0eea1bc2e22",
+      "detail_md": "## 不同来源，不能互相代替\n\n长度尺度是所选连续模型的定义部分；离散误差是该模型连续解与有限自由度近似的差异。两者虽都影响计算输出，却应使用不同实验区分：固定 $\\ell$ 细化网格观察数值稳定，再在数值误差可控时比较不同 $\\ell$。\n\n例如改变 $\\ell$ 导致起裂载荷变化，不能一律称为网格误差；网格足够细也不能替你决定正确材料尺度。这条区别边帮助设计可解释的参数研究。更直接比较 l 与 h 仍可另建边，但不需把本边重复成同义结论。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "finite_element_mesh",
+      "target": "finite_element_discretization_error",
+      "relation": "foundation",
+      "description": "有限元网格尺寸决定离散精度和相场变量梯度的解析能力。",
+      "review_status": "needs_revision",
+      "id": "rel_cd09588008a3fd47",
+      "detail_md": "## 影响精度，而非理论基础\n\n有限元形函数在每个单元上表示场与梯度，网格太粗会漏掉快速变化。改变 $h$ 因而能改变离散误差，但 $h$ 并不独自决定精度：阶次、积分和解的正则性也重要。\n\n原 foundation 标签待调整，建议用 influences。实际验证需要固定其他条件、使用多个网格并比较关注量，不能仅凭一次加密观察相近就推出误差为零。也不要把非线性迭代未收敛或不同裂纹分支都归因于网格。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "length_scale_parameter",
+      "target": "sharp_crack_limit",
+      "relation": "derive",
+      "description": "在经典变分相场框架中，长度尺度趋于零的过程用于理论上逼近尖锐裂纹极限。",
+      "review_status": "needs_revision",
+      "id": "rel_77ec32a5ab18bbe3",
+      "detail_md": "## 参数极限需要完整对象\n\n令 $\\ell\\to0$ 描述一族正则化泛函的变化，不是一个孤立标量推导出一条裂纹。要谈尖锐裂纹极限，必须同时说明泛函、约束、拓扑、其他小参数与紧性条件。\n\n原 derive 标签不足，未来可用 limit_process 一类关系，但本次不改枚举。它能提示研究方向：理论上分析能量近似，数值上先控制离散误差。仅减小 $\\ell$、保持粗网格既不能解析变窄的层，也不构成任何收敛证明。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "phase_field_fracture",
+      "target": "sharp_crack_limit",
+      "relation": "application",
+      "description": "相场断裂方法通过长度尺度正则化构造对尖锐裂纹问题的连续近似。",
+      "review_status": "needs_revision",
+      "id": "rel_4b60062765279df2",
+      "detail_md": "## 这是近似与极限联系\n\n某些变分相场族被构造为尖锐裂纹能量的近似，并在条件满足时具有相应收敛性质。因此两个节点相连有意义，但“application”不能准确表达这种极限关系。\n\n建议未来在协议中区分 approximates 与 limit。能量极限、极小解收敛、演化路径收敛需要不同条件，不能混在一句“相场逼近 Griffith”里。当前边待调整；它可帮助追问你需要证明的是哪一种逼近，而不是默认所有预测已准确。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "phase_field_fracture",
+      "target": "at1_model",
+      "relation": "extension",
+      "description": "AT1是变分相场断裂框架中的一种具体模型形式。",
+      "review_status": "provisional",
+      "id": "rel_a6ddddfea8f9555e",
+      "detail_md": "## 从通用框架到具体选择\n\nAT1 在共同裂纹密度框架内选择 $w(d)=d$ 与相应归一化常数。它继承位移—损伤能量竞争，同时通过局部代价改变损伤起始。共同框架为 source，具体形式为 target，与当前方向一致。\n\n严格地说“具体形式”更像 specialization 而不是一般 extension；目前标签仍是候选。沿此边阅读时先掌握总能量每一项，再替换局部函数，不必重新理解整套框架。任何阈值推演都要同时给出退化、约束和加载。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "phase_field_fracture",
+      "target": "at2_model",
+      "relation": "extension",
+      "description": "AT2是变分相场断裂框架中的一种具体模型形式。",
+      "review_status": "provisional",
+      "id": "rel_3f39d2ba65887bfb",
+      "detail_md": "## 同一框架中的另一种局部代价\n\nAT2 取 $w(d)=d^2$，归一化后有 $d^2/(2\\ell)+\\ell|\\nabla d|^2/2$。它同样继承场耦合和能量竞争，但初始点局部裂纹代价的导数不同，进而改变损伤起始。\n\n方向由共同框架指向具体形式，语义上仍更适合 specialization。相同框架不保证相同材料参数能给出相同起裂预测。该边帮助把“框架共享”与“本构不同”区分开，并引向与 AT1 的受控比较。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "at1_model",
+      "target": "at2_model",
+      "relation": "difference",
+      "description": "AT1与AT2主要区别在裂纹密度函数形式及其导致的损伤演化特征。",
+      "review_status": "provisional",
+      "id": "rel_83d1baef5f0114ae",
+      "detail_md": "## 关键差异在初始能量斜率\n\n在相同 $g=(1-d)^2$ 的均匀一维例子中，AT1 局部裂纹项在 $d=0$ 有正斜率，AT2 的二次项此处斜率为零。因此 AT1 可保持初始无损伤阶段，AT2 在正弹性能下可能出现微小损伤。\n\n这一差异解释了曲线的早期响应，但不是一句“谁更弥散”能概括的全部。还要比较剖面、峰值、参数校准与约束。微小损伤、宏观起裂和结构破坏分开定义。比较时固定公共假设；若目的是比较同一材料，则需说明是否分别标定了强度与断裂能。",
+      "sources": [
+        {
+          "title": "An assessment of phase field fracture: crack initiation and growth",
+          "url": "https://arxiv.org/html/2103.05443v2",
+          "locator": "2.1–2.3 与 3.2 节",
+          "supports": "能量框架、AT 形式及有限元表示；例子和缩放推演是本笔记的教学计算"
+        }
+      ]
+    },
+    {
+      "source": "shape_function",
+      "target": "finite_element_interpolation",
+      "relation": "foundation",
+      "description": "形函数构成有限元插值的基函数，使连续场可以由节点值表示。",
+      "detail_md": "有限元插值的核心公式 $d_h=\\sum_iN_id_i$ 依赖形函数。形函数规定每个节点自由度对单元内部任意位置的贡献，因此没有形函数就无法从离散节点恢复连续近似场。该关系适用于标准有限元离散。",
+      "sources": [],
+      "id": "rel_586cdaf8373415de",
+      "review_status": "provisional"
+    },
+    {
+      "source": "finite_element_interpolation",
+      "target": "finite_element_mesh",
+      "relation": "foundation",
+      "description": "有限元插值能力受到网格尺寸和单元类型限制。",
+      "detail_md": "网格尺寸决定有限元近似空间的空间分辨率。单元越大，节点之间允许表达的变化尺度越粗。对于相场裂纹区域，如果网格不足以解析由 l 控制的快速变化，则 $d_h$ 与真实相场之间的误差增加。",
+      "sources": [],
+      "id": "rel_c061c4633191de34",
+      "review_status": "needs_revision",
+      "review_notes": "正文表达网格对插值精度的影响，foundation 标签未准确表达；建议作为理解网格精度的 prerequisite，尚未自动替换。"
+    },
+    {
+      "source": "finite_element_interpolation",
+      "target": "finite_element_discretization_error",
+      "relation": "foundation",
+      "description": "有限元插值误差是离散误差的重要来源。",
+      "detail_md": "有限元离散误差包括近似空间误差和数值求解误差。插值空间无法完全表示真实相场时，会产生场值和梯度误差。在相场断裂中，由于能量包含梯度项，这种误差会影响裂纹能量计算。",
+      "sources": [],
+      "id": "rel_810389a68c710a00",
+      "review_status": "needs_revision",
+      "review_notes": "近似空间解释有用；迭代求解误差应与严格意义的空间离散误差区分，插值误差也不等于完整 Galerkin 解误差。foundation 标签待审阅。"
+    }
+  ]
+}

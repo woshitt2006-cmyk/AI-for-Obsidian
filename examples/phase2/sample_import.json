@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.1",
+  "topic_id": "phase_field_length_scale",
+  "topic": "参考坐标如何转换为物理梯度",
+  "nodes": [
+    {
+      "id": "reference_element_mapping",
+      "name": "参考单元映射",
+      "type": "method",
+      "description": "把统一参考单元连接到真实物理单元，并用链式法则转换梯度和积分。",
+      "domain": [
+        "有限元方法",
+        "计算力学"
+      ],
+      "sources": [
+        {
+          "title": "MFEM — Integration",
+          "url": "https://mfem.org/integration/",
+          "locator": "Coordinate Transformations 与 Basis Function Evaluation",
+          "supports": "参考到物理单元映射与标量基梯度变换；具体数值是教学计算"
+        }
+      ],
+      "content_md": "## 核心问题与直觉\n\n实际网格单元的大小和位置各不相同。参考单元把形函数先放在统一坐标中，再映射到真实位置。这样基函数的模板可以复用，但物理导数仍必须考虑真实单元长度。下面只讨论标量场的一维两节点仿射 Lagrange 单元。\n\n## 参考与物理坐标\n\n参考坐标 $\\xi\\in[-1,1]$ 无量纲，物理坐标 $x\\in[0,L]$ 有长度单位。取\n\n$$\n\\hat N_1=(1-\\xi)/2,\\quad \\hat N_2=(1+\\xi)/2,\n\\qquad x=L(1+\\xi)/2.\n$$\n\n两端映射到 0 和 L。Jacobian 为 $J=\\mathrm dx/\\mathrm d\\xi=L/2$。由链式法则，$\\mathrm dN_i/\\mathrm dx=(2/L)\\mathrm d\\hat N_i/\\mathrm d\\xi$，因此物理导数为 $-1/L$ 与 $1/L$，单位为长度的倒数。这里的帽子表示参考坐标中的基函数。\n\n## 具体演示\n\n假设 $L=2$ mm、$d_1=0.2$、$d_2=0.8$，不是实验数据。在中点 $\\xi=0$，两个权重均为 0.5，得到 $d_h=0.5$。梯度为 $(0.8-0.2)/(2\\ \\mathrm{mm})=0.3\\ \\mathrm{mm}^{-1}$。相场值无量纲，梯度有倒长度单位；换成米后梯度是 $300\\ \\mathrm m^{-1}$，物理意义不变。\n\n## 如何进入能量积分\n\n对单个一维单元，AT2 梯度部分可以示意为 $G_c\\ell\\int_0^L(d_h')^2\\mathrm dx/2$。改变到参考坐标时，导数带 $2/L$，积分微元带 $L/2$；两者不能只变换一个。二维三维还需考虑厚度或体积分，不要把一维示意的单位直接照搬到三维总能量。\n\n## 条件与误解\n\n一般等维映射下标量基的梯度满足 $\\nabla_x N=J^{-T}\\nabla_\\xi\\hat N$，此处一维例子是其特例。曲边或多维单元的 Jacobian 可以随位置变化。映射正确不保证网格足够细；线性单元内的常梯度仍可能无法逼近弯曲的真实剖面。\n\n## 下一问\n\n为什么中点场值准确，也不一定保证整个单元的平方梯度积分准确？"
+    }
+  ],
+  "edges": [
+    {
+      "source": "shape_function",
+      "target": "reference_element_mapping",
+      "relation": "prerequisite",
+      "description": "理解形函数的定义后，才能解释它们在参考与物理单元之间怎样转换。",
+      "sources": [
+        {
+          "title": "MFEM — Integration",
+          "url": "https://mfem.org/integration/",
+          "locator": "Coordinate Transformations 与 Basis Function Evaluation",
+          "supports": "参考到物理单元映射与标量基梯度变换；具体数值是教学计算"
+        }
+      ],
+      "detail_md": "## 为什么相连\n\n形函数规定节点自由度如何组合为场，映射规定同一个参考位置对应哪个物理位置。先理解 $\\hat N_i$ 在参考单元中的节点取值性质，才能区分“权重的值”与“对哪个坐标求导”。这使形函数成为本例坐标映射学习的前置知识。\n\n## 中间步骤与条件\n\n在标量 Lagrange 情形，物理基可通过参考基与逆映射组合。场值继承参考权重，梯度则使用链式法则。这个关系不表示所有有限元都采用相同变换；向量元可能有其他映射规则。\n\n## 对本次疑问的帮助\n\n它把“为什么要变换导数”分解为基函数定义、坐标关系和空间导数三个层次，避免把参考导数的数值直接当作物理梯度。"
+    },
+    {
+      "source": "reference_element_mapping",
+      "target": "finite_element_mesh",
+      "relation": "prerequisite",
+      "description": "理解坐标映射，有助于解释物理单元尺寸为何出现在场梯度与积分中。",
+      "sources": [
+        {
+          "title": "MFEM — Integration",
+          "url": "https://mfem.org/integration/",
+          "locator": "Coordinate Transformations 与 Basis Function Evaluation",
+          "supports": "参考到物理单元映射与标量基梯度变换；具体数值是教学计算"
+        }
+      ],
+      "detail_md": "## 为什么相连\n\n这里的前置关系针对理解网格尺寸如何进入计算，而不是声称认识网格这个概念必须先学映射。一维仿射单元中 $J=L/2$，求导变换带 $1/L$，说明参考模板相同的单元会因为物理长度不同而具有不同的梯度尺度。\n\n## 中间步骤与条件\n\n先将参考形函数映射到真实单元，再用链式法则得到物理导数，最后用 Jacobian 转换积分微元。这些步骤使物理网格尺度进入梯度能量计算，但没有改变连续模型的长度尺度 $\\ell$。\n\n## 怎样使用这条联系\n\n固定材料与 $\\ell$ 后细化网格，是增加求解分辨率。理解映射能解释代码里出现的长度因子，却不能代替网格收敛验证，也不能保证任意粗单元能够解析快速变化的剖面。"
+    }
+  ]
+}

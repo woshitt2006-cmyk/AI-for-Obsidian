@@ -1,0 +1,17 @@
+{
+	"nodes":[
+		{"id":"finite_element_mesh","type":"file","file":"Concepts/finite_element_mesh.md","x":0,"y":0,"width":420,"height":300},
+		{"id":"finite_element_interpolation","type":"file","file":"Concepts/finite_element_interpolation.md","x":0,"y":380,"width":420,"height":300},
+		{"id":"shape_function","type":"file","file":"Concepts/shape_function.md","x":0,"y":760,"width":420,"height":300},
+		{"id":"finite_element_discretization_error","type":"file","file":"Concepts/finite_element_discretization_error.md","x":520,"y":380,"width":420,"height":300},
+		{"id":"length_scale_parameter","type":"file","file":"Concepts/length_scale_parameter.md","x":-520,"y":0,"width":420,"height":300}
+	],
+	"edges":[
+		{"id":"edge_5","fromNode":"length_scale_parameter","fromSide":"right","toNode":"finite_element_mesh","toSide":"left","color":"5","label":"前置理解 · 候选"},
+		{"id":"round02_edge_1","fromNode":"length_scale_parameter","toNode":"finite_element_discretization_error","label":"区别 · 候选","color":"5","fromSide":"bottom","toSide":"top"},
+		{"id":"round02_edge_2","fromNode":"finite_element_mesh","toNode":"finite_element_discretization_error","label":"理论基础 · 待调整","color":"1","fromSide":"left","toSide":"right"},
+		{"id":"rel_586cdaf8373415de","fromNode":"shape_function","toNode":"finite_element_interpolation","label":"理论基础 · 候选","color":"5","fromSide":"top","toSide":"bottom"},
+		{"id":"rel_c061c4633191de34","fromNode":"finite_element_interpolation","toNode":"finite_element_mesh","label":"理论基础 · 待调整","color":"1","fromSide":"top","toSide":"bottom"},
+		{"id":"rel_810389a68c710a00","fromNode":"finite_element_interpolation","toNode":"finite_element_discretization_error","label":"理论基础 · 待调整","color":"1","fromSide":"right","toSide":"left"}
+	]
+}

@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:aikg:knowledge:1.1",
+  "title": "Knowledge Graph input 1.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "topic_id",
+    "topic",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.1"
+    },
+    "topic_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,95}$"
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "description",
+          "domain",
+          "content_md",
+          "sources"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,95}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "type": {
+            "enum": [
+              "concept",
+              "theory",
+              "equation",
+              "method",
+              "application",
+              "question",
+              "paper"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "domain": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "content_md": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "url",
+                "locator",
+                "supports"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^https?://"
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "supports": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "relation",
+          "description",
+          "detail_md",
+          "sources"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,95}$"
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,95}$"
+          },
+          "relation": {
+            "enum": [
+              "foundation",
+              "derive",
+              "application",
+              "analogy",
+              "extension",
+              "difference",
+              "prerequisite"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "detail_md": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "url",
+                "locator",
+                "supports"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^https?://"
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "supports": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
